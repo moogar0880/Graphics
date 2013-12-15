@@ -1,84 +1,419 @@
-/**
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  * ControlPanel.cpp - a class to set up user controls and handle changes
  *  in them.
- * 
+ *
  * mdp
  * September 21, 2008
  * 09/30/2012 changed by Can Xiong by adding more items
  * 09/15/2013 rdb modified/simplified Can's version
- */
-
+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 #include <iostream>
 #include "ControlPanel.h"
+#include "Box.h"
+#include "Cone.h"
+#include "Donut.h"
+#include "Eye.h"
+#include "Hat.h"
+#include "Head.h"
+#include "Clown.h"
+#include "Snowman.h"
 
 //------------------ Class variables ---------------------------------
 ControlPanel *ControlPanel::instance = NULL;
 
-//------------------ Constructors ------------------------------------
-/** Initialize values
- */
-ControlPanel::ControlPanel()
-{
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ * Initialize values
+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+ControlPanel::ControlPanel(){
     world = NULL;
 
     lighting = 1; // Default light is on
     drawAxes = 1; // Default drawAxes
     glui = NULL;
-
+    which_lookat = which_advanced = 0;
+    which_projection = 1;
+    newX = newY = newZ = viewAngle = aspectRatio = near = far =
+        newLeft = newRight = newBottom = newTop = newNear =
+        newFar = 0.0;
 }
-//-------------------------------------------------------------------
-/** Create the GLUI window, and add controls.
- */
-void ControlPanel::initialize( std::string name, int windowID )
-{
+
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ * Build the projection type radio buttons
+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+void ControlPanel::buildProjectionChoice( GLUI* g ){
+    GLUI_Panel* panel;
+    panel = g->add_panel( "Projection Type" );
+    projection_group = g->add_radiogroup_to_panel( panel,
+                                                   &which_projection,
+                                                   SET_PROJECTION,
+                                                   controlChanged_cb );
+    g->add_radiobutton_to_group( projection_group, "Parallel" );
+    g->add_radiobutton_to_group( projection_group, "Perspective" );
+}
+
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ * Build the Look at radio buttons and sliders
+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+void ControlPanel::buildLookAtPanel( GLUI* g ){
+    lookAtPanel = g->add_panel( "Look At Controls" );
+    lookAt_group = g->add_radiogroup_to_panel( lookAtPanel,
+                                               &which_lookat,
+                                               SET_LOOKAT,
+                                               controlChanged_cb );
+    g->add_radiobutton_to_group( lookAt_group, "Eye" );
+    g->add_radiobutton_to_group( lookAt_group, "Look At" );
+    g->add_radiobutton_to_group( lookAt_group, "Up" );
+    slider1 = new GLUI_Scrollbar( lookAtPanel, "X Slider",
+                                   GLUI_SCROLL_HORIZONTAL, &newX,
+                                   LOOKAT, controlChanged_cb );
+    slider1->set_float_limits(-300.0,300.0);
+    slider2 = new GLUI_Scrollbar( lookAtPanel, "Y Slider",
+                                  GLUI_SCROLL_HORIZONTAL, &newY,
+                                  LOOKAT, controlChanged_cb );
+    slider2->set_float_limits(-300.0,300.0);
+    slider3 = new GLUI_Scrollbar( lookAtPanel, "Z Slider",
+                                  GLUI_SCROLL_HORIZONTAL, &newZ,
+                                  LOOKAT, controlChanged_cb );
+    slider3->set_float_limits(-300.0,300.0);
+}
+
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ * Build the perspective sliders
+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+void ControlPanel::buildPerspectivePanel( GLUI* g ){
+    perspectivePanel = g->add_panel( "Perspective Controls" );
+    slider4 = new GLUI_Scrollbar( perspectivePanel, "View Angle",
+                                   GLUI_SCROLL_HORIZONTAL, &viewAngle,
+                                   PERSPECTIVE, controlChanged_cb );
+    slider4->set_float_limits(-300.0,300.0);
+    slider5 = new GLUI_Scrollbar( perspectivePanel, "Aspect Ratio",
+                                   GLUI_SCROLL_HORIZONTAL, &aspectRatio,
+                                   PERSPECTIVE, controlChanged_cb );
+    slider5->set_float_limits(-300.0,300.0);
+    slider6 = new GLUI_Scrollbar( perspectivePanel, "Near",
+                                   GLUI_SCROLL_HORIZONTAL, &near,
+                                   PERSPECTIVE, controlChanged_cb );
+    slider6->set_float_limits(-300.0,300.0);
+    slider7 = new GLUI_Scrollbar( perspectivePanel, "Far",
+                                   GLUI_SCROLL_HORIZONTAL, &far,
+                                   PERSPECTIVE, controlChanged_cb );
+    slider7->set_float_limits(-300.0,300.0);
+}
+
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ * Build the projection radio buttons and sliders
+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+void ControlPanel::buildAdvancedPanel( GLUI* g ){
+    advancedPanel = g->add_panel( "Projection Controls" );
+    advanced_group = g->add_radiogroup_to_panel( advancedPanel,
+                                                 &which_advanced,
+                                                 SET_ADVANCED,
+                                                 controlChanged_cb );
+    g->add_radiobutton_to_group( advanced_group, "Ortho" );
+    g->add_radiobutton_to_group( advanced_group, "Frustum" );
+    slider8 = new GLUI_Scrollbar( advancedPanel, "Left",
+                                  GLUI_SCROLL_HORIZONTAL, &newLeft,
+                                  ADVANCED, controlChanged_cb );
+    slider8->set_float_limits(-300.0,300.0);
+    slider9 = new GLUI_Scrollbar( advancedPanel, "Right",
+                                  GLUI_SCROLL_HORIZONTAL, &newRight,
+                                  ADVANCED, controlChanged_cb );
+    slider9->set_float_limits(-300.0,300.0);
+    slider10 = new GLUI_Scrollbar( advancedPanel, "Bottom",
+                                   GLUI_SCROLL_HORIZONTAL, &newBottom,
+                                   ADVANCED, controlChanged_cb );
+    slider10->set_float_limits(-300.0,300.0);
+    slider11 = new GLUI_Scrollbar( advancedPanel, "Top",
+                                   GLUI_SCROLL_HORIZONTAL, &newTop,
+                                   ADVANCED, controlChanged_cb );
+    slider11->set_float_limits(-300.0,300.0);
+    slider12 = new GLUI_Scrollbar( advancedPanel, "Near",
+                                   GLUI_SCROLL_HORIZONTAL, &newNear,
+                                   ADVANCED, controlChanged_cb );
+    slider12->set_float_limits(-300.0,300.0);
+    slider13 = new GLUI_Scrollbar( advancedPanel, "Far",
+                                   GLUI_SCROLL_HORIZONTAL, &newFar,
+                                   ADVANCED, controlChanged_cb );
+    slider13->set_float_limits(-300.0,300.0);
+}
+
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ * Create the GLUI controls for adding new shapes to the scene. Each
+ *  new shape will be added at the origin
+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+void ControlPanel::buildCreateShapeButtons( GLUI* g ){
+    g->add_button( "Add Box", BOX_BUTTON, controlChanged_cb );
+    g->add_button( "Add Clown", CLOWN_BUTTON, controlChanged_cb );
+    g->add_button( "Add Donut", DONUT_BUTTON, controlChanged_cb );
+    g->add_button( "Add Eye", EYE_BUTTON, controlChanged_cb );
+    g->add_button( "Add Head", HEAD_BUTTON, controlChanged_cb );
+    g->add_button( "Add Snowman", SNOWMAN_BUTTON, controlChanged_cb );
+    g->add_button( "Add Sphere", SPHERE_BUTTON, controlChanged_cb );
+}
+
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ * Create the GLUI window and add controls
+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+void ControlPanel::initialize( std::string name, int windowID ){
     //Create interface
     glui = GLUI_Master.create_glui( name.c_str() );
     glui->add_checkbox( "Light on", &lighting,
                        LIGHTING_CHECKBOX, controlChanged_cb );
     glui->add_checkbox( "Draw Axes", &drawAxes,
                        DRAWAXES_CHECKBOX, controlChanged_cb );
-    
+
     glui->add_button( "Quit",
                      QUIT_BUTTON, controlChanged_cb );
+    glui->add_button( "Previous Scene",
+                     PREVSCENE_BUTTON, controlChanged_cb );
     glui->add_button( "Next Scene",
                      NEXTSCENE_BUTTON, controlChanged_cb );
-    
-    
-    // Tell GLUI window which other window to recognize as the main gfx window
-    if ( windowID >= 0 )
-    {
+
+    buildProjectionChoice( glui );
+    buildLookAtPanel( glui );
+    buildPerspectivePanel( glui );
+    buildAdvancedPanel( glui );
+    buildCreateShapeButtons( glui );
+
+    // Tell GLUI window which other window is the main gfx window
+    if ( windowID >= 0 ){
         glui->set_main_gfx_window( windowID );
         GLUI_Master.set_glutDisplayFunc( redraw_cb );
     }
 }
 
-//----------------- setSceneWorld( vector<Scene*> ) -----------------------
-/**
- *  define the vector of Scenes we can walk through
- */
-void ControlPanel::setSceneWorld( std::vector<Scene*>* allScenes )
-{
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ * Update the corresponding variables and reflect these changes in the
+ *  current scene
+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+void ControlPanel::updateWorldWithSlider( void ){
+    switch( which_lookat ){
+        case 0:
+            eyeX = newX;
+            eyeY = newY;
+            eyeZ = newZ;
+            break;
+        case 1:
+            lookX = newX;
+            lookY = newY;
+            lookZ = newZ;
+            break;
+        case 2:
+            upX = newX;
+            upY = newY;
+            upZ = newZ;
+            break;
+    }
+    world->at( curSceneIndex )->setLookat( eyeX, eyeY, eyeZ,
+                                           lookX, lookY, lookZ,
+                                           upX, upY, upZ );
+}
+
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ * Sets the lookat sliders when their radio button context has changed
+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+void ControlPanel::setLookAtSliders(){
+    float* vals = world->at( curSceneIndex )->getLookat();
+    switch( which_lookat ){
+        case 0:
+            slider1->set_float_val( vals[0] );
+            eyeX = vals[0];
+            slider1->set_float_val( vals[1] );
+            eyeY = vals[1];
+            slider1->set_float_val( vals[2] );
+            eyeZ = vals[2];
+            break;
+        case 1:
+            slider1->set_float_val( vals[3] );
+            lookX = vals[3];
+            slider1->set_float_val( vals[4] );
+            lookY = vals[4];
+            slider1->set_float_val( vals[5] );
+            lookZ = vals[5];
+            break;
+        case 2:
+            slider1->set_float_val( vals[6] );
+            upX = vals[6];
+            slider1->set_float_val( vals[7] );
+            upY = vals[7];
+            slider1->set_float_val( vals[8] );
+            upZ = vals[8];
+            break;
+    }
+}
+
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ * Updates the projection values and then reflects the changes in the
+ *  current scene
+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+void ControlPanel::updateAdvanced( void ){
+    std::cerr << which_advanced << std::endl;
+    switch( which_advanced ){
+        case 0:
+            left = newLeft;
+            right = newRight;
+            bottom = newBottom;
+            top = newTop;
+            onear = newNear;
+            ofar = newFar;
+            break;
+        case 1:
+            fleft = newLeft;
+            fright = newRight;
+            fbottom = newBottom;
+            ftop = newTop;
+            fnear = newNear;
+            ffar = newFar;
+            break;
+    }
+    updateWorldProjections(  );
+}
+
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ * Set the projection sliders when their radio button context has
+ *  changed
+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+void ControlPanel::setAdvancedSliders(){
+    switch( which_advanced ){
+        case 0:
+            slider8->set_float_val( left );
+            slider9->set_float_val( right );
+            slider10->set_float_val( bottom );
+            slider11->set_float_val( top );
+            slider12->set_float_val( onear );
+            slider13->set_float_val( ofar );
+            break;
+        case 1:
+            slider8->set_float_val( fleft );
+            slider9->set_float_val( fright );
+            slider10->set_float_val( fbottom );
+            slider11->set_float_val( ftop );
+            slider12->set_float_val( fnear );
+            slider13->set_float_val( ffar );
+            break;
+    }
+}
+
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ * Get the initial values from the current scene
+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+void ControlPanel::getInitValues(){
+    if( world != NULL && world->at( curSceneIndex ) != NULL ){
+        float* vals = world->at( curSceneIndex )->getLookat();
+        newX = eyeX = vals[0];
+        newY = eyeY = vals[1];
+        newZ = eyeZ = vals[2];
+        lookX = vals[3];
+        lookY = vals[4];
+        lookZ = vals[5];
+        upX = vals[6];
+        upY = vals[7];
+        upZ = vals[8];
+
+        vals = world->at( curSceneIndex )->getPerspective();
+        viewAngle = vals[0];
+        aspectRatio = vals[1];
+        near = vals[2];
+        far = vals[3];
+    }
+}
+
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ * Package up the current Ortho values into a float array
+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+float* ControlPanel::packageOrtho( ){
+    float* toRet = new float[6];
+    toRet[0] = left;
+    toRet[1] = right;
+    toRet[2] = bottom;
+    toRet[3] = top;
+    toRet[4] = onear;
+    toRet[5] = ofar;
+    return toRet;
+}
+
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ * Package up the current Frustum values into a float array
+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+float* ControlPanel::packageFrustum( ){
+    float* toRet = new float[6];
+    toRet[0] = fleft;
+    toRet[1] = fright;
+    toRet[2] = fbottom;
+    toRet[3] = ftop;
+    toRet[4] = fnear;
+    toRet[5] = ffar;
+    return toRet;
+}
+
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ * Update the current scene's projection values if their radio status
+ *  corresponds to the values being set
+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+void ControlPanel::updateWorldProjections( void ){
+    switch( which_advanced ){
+        case 0:
+            if( world->at( curSceneIndex )->getParallelStatus() )
+                world->at( curSceneIndex )->setOrtho( packageOrtho() );
+            break;
+        case 1:
+            if( !world->at( curSceneIndex )->getParallelStatus() )
+               world->at( curSceneIndex )->setFrustum(packageFrustum());
+            break;
+    }
+}
+
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ * Define the vector of Scenes we can walk through
+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+void ControlPanel::setSceneWorld( std::vector<Scene*>* allScenes ){
     world = allScenes;
-    
+
     curSceneIndex = -1;   // initialize to no scene index
     curScene = NULL;
-    
-    if ( world->size() > 0 )
-    {
+
+    if ( world->size() > 0 ){
         nextScene();
     }
 }
-//------------------ nextScene -------------------------------
-/**
- *  setup next scene
- */
-void ControlPanel::nextScene()
-{
+
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ * Reset the value of the sliders between scene changes
+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+void ControlPanel::resetSliders(){
+    which_lookat = which_advanced = 0;
+    which_projection = 1;
+    newX = newY = newZ = viewAngle = aspectRatio = near = far =
+        newLeft = newRight = newBottom = newTop = newNear =
+        newFar = 0.0;
+}
+
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ * Setup next scene
+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+void ControlPanel::nextScene(){
     curSceneIndex++;
     if ( curSceneIndex >= (int)world->size() )
         curSceneIndex = 0;   // wraparound
     std::cerr << "Next scene " << curSceneIndex << "\n";
-    
+
+    resetSliders();
+    glui->sync_live();
+    curScene = world->at( curSceneIndex );
+    redraw();
+}
+
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ * Setup previous scene
+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+void ControlPanel::prevScene(){
+    curSceneIndex--;
+    if ( curSceneIndex < 0 )
+        curSceneIndex = (int)world->size() - 1;   // wraparound
+    std::cerr << "Prev scene " << curSceneIndex << "\n";
+
+    resetSliders();
+    glui->sync_live();
     curScene = world->at( curSceneIndex );
     redraw();
 }
@@ -86,8 +421,7 @@ void ControlPanel::nextScene()
 //------------------ public class methods --------------------------
 /** Return the singleton instance.  If it does not exist, create one.
  */
-ControlPanel *ControlPanel::getInstance()
-{
+ControlPanel *ControlPanel::getInstance(){
     if ( !instance )
         instance = new ControlPanel();
     return instance;
@@ -96,53 +430,99 @@ ControlPanel *ControlPanel::getInstance()
 //---------------------------------------------------------------------
 /** Pass control to the class's controlChanged method
  */
-void ControlPanel::controlChanged_cb( int control_enum_value )
-{
+void ControlPanel::controlChanged_cb( int control_enum_value ){
     getInstance()->controlChanged( control_enum_value );
 }
 //---------------------------------------------------------------------
-/** 
+/**
  *  Static call method; just passes control to the class's redraw method
  */
-void ControlPanel::redraw_cb()
-{
+void ControlPanel::redraw_cb(){
     getInstance()->redraw();
 }
 
 //---------------------------------------------------------------------
 /** Pass control to the class's controlChanged method
  */
-void ControlPanel::redraw()
-{
+void ControlPanel::redraw(){
     if ( curScene != NULL )
         curScene->redraw();
 }
 
 //-------------------- protected methods -----------------------------
-void ControlPanel::controlChanged( int control_enum_value )
-{
-    switch ( control_enum_value )
-    {
+void ControlPanel::controlChanged( int control_enum_value ){
+    switch ( control_enum_value ){
         case LIGHTING_CHECKBOX:
-            //std::cerr << "Light enabled value changed to " << lighting;
             if( !lighting )
                 glDisable( GL_LIGHT0 );
             else
                 glEnable( GL_LIGHT0 );
             break;
         case DRAWAXES_CHECKBOX:
-            //std::cerr << "Draw Axes value changed to " << drawAxes;
             curScene->setDrawAxes( drawAxes );
             break;
+        case PREVSCENE_BUTTON:
+            prevScene();
+            break;
         case NEXTSCENE_BUTTON:
-            //std::cerr << "Next Scene \n";
             nextScene();
             break;
         case QUIT_BUTTON:
-            //std::cerr << "Exiting..." << std::endl;
             exit( 0 );
             break;
-
+        case SET_PROJECTION:
+            if( which_projection == 0 )
+                world->at( curSceneIndex )->setParallelStatus( true );
+            else
+                world->at( curSceneIndex )->setParallelStatus( false );
+        case LOOKAT:
+            updateWorldWithSlider();
+            break;
+        case PERSPECTIVE:
+            world->at( curSceneIndex )->setPerspective( viewAngle,
+                                                        aspectRatio,
+                                                        near, far );
+            break;
+        case SET_LOOKAT:
+            setLookAtSliders(  );
+            break;
+        case SET_ADVANCED:
+            setAdvancedSliders(  );
+            break;
+        case ADVANCED:
+            updateAdvanced(  );
+            break;
+        case BOX_BUTTON:
+            world->at( curSceneIndex )->addObject( new Box() );
+            world->at( curSceneIndex )->redraw();
+            break;
+        case CLOWN_BUTTON:
+            world->at( curSceneIndex )->addObject( new Clown() );
+            world->at( curSceneIndex )->redraw();
+            break;
+        case DONUT_BUTTON:
+            world->at( curSceneIndex )->addObject( new Donut() );
+            world->at( curSceneIndex )->redraw();
+            break;
+        case EYE_BUTTON:
+            world->at( curSceneIndex )->addObject( new Eye() );
+            world->at( curSceneIndex )->redraw();
+            break;
+        case HAT_BUTTON:
+            world->at( curSceneIndex )->addObject( new Hat() );
+            world->at( curSceneIndex )->redraw();
+            break;
+        case HEAD_BUTTON:
+            world->at( curSceneIndex )->addObject( new Head() );
+            world->at( curSceneIndex )->redraw();
+            break;
+        case SNOWMAN_BUTTON:
+            world->at( curSceneIndex )->addObject( new Snowman() );
+            world->at( curSceneIndex )->redraw();
+            break;
+        case SPHERE_BUTTON:
+            world->at( curSceneIndex )->addObject( new Sphere() );
+            world->at( curSceneIndex )->redraw();
+            break;
     }
-    std::cerr << std::endl;
 }

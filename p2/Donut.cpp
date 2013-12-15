@@ -36,6 +36,6 @@ void Donut::redraw(){
         glTranslatef( xLoc, yLoc, zLoc );
         glRotatef( angle, dxRot, dyRot, dzRot );
         glScalef( xSize, ySize, zSize );
-        glutSolidTorus( 10, 50, length, 1 );
+        glutSolidTorus( xSize/4, xSize/2, 10, 50 );
     glPopMatrix();
 }

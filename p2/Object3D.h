@@ -11,7 +11,11 @@
 #define OBJECT3D_H_
 
 #include <vector>
+#ifdef __APPLE__
+#include <GLUT/glut.h>
+#else
 #include <GL/glut.h>
+#endif
 #include "Color.h"
 #include "Point3.h"
 

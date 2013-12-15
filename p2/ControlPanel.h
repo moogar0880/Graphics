@@ -1,7 +1,7 @@
 /**
  * ControlPanel.h - a class to set up user controls and handle changes
  *  in them.
- * 
+ *
  * mdp
  * September 21, 2008
  * History:
@@ -19,10 +19,10 @@
 #if defined( __linux__ ) || defined( __CYGWIN )
   #include <GL/glut.h>
   #include <GL/glui.h>
-#else 
+#else
   #include <glut.h>
   #include <glui.h>
-#endif 
+#endif
 
 class ControlPanel
 {
@@ -36,8 +36,9 @@ public:
     void initialize(std::string name, int windowID = -1);
     void setEyePos( float eyeX, float eyeY, float eyeZ );
     void redraw();
+    void getInitValues( void );
 
-protected: 
+protected:
     //----Singleton Pattern parts----
     ControlPanel();
     static ControlPanel *instance;
@@ -54,50 +55,89 @@ protected:
            LIGHTING_CHECKBOX,
            DRAWAXES_CHECKBOX,
            QUIT_BUTTON,
-           NEXTSCENE_BUTTON
+           NEXTSCENE_BUTTON,
+           PREVSCENE_BUTTON,
+           SET_PROJECTION,
+           SET_LOOKAT,
+           LOOKAT,
+           SET_ADVANCED,
+           ADVANCED,
+           PERSPECTIVE,
+           BOX_BUTTON,
+           CLOWN_BUTTON,
+           DONUT_BUTTON,
+           EYE_BUTTON,
+           HAT_BUTTON,
+           HEAD_BUTTON,
+           SNOWMAN_BUTTON,
+           SPHERE_BUTTON
          };
-    
+
     //object-level method for handling changes in controls
     void controlChanged( int control_enum_value );
-    
+
     // go to next scene
     void nextScene();
+    // go to the previous scene
+    void prevScene();
+    void resetSliders( void );
+
+    void setPanel( void );
+    void clearPanels( void );
+
+    // Scene updaters
+    void updateWorldWithSlider( void );
+    void updateWorldProjections( void );
+    void updateAdvanced( void );
+    float* packageOrtho( void );
+    float* packageFrustum( void );
+
+    // Slider updaters
+    void setLookAtSliders( void );
+    void setAdvancedSliders( void );
+
+    // ControlPanel Builders
+    void buildProjectionChoice( GLUI* g );
+    void buildLookAtPanel( GLUI* g );
+    void buildPerspectivePanel( GLUI* g );
+    void buildAdvancedPanel( GLUI* g );
+    void buildCreateShapeButtons( GLUI* g );
 
     //----Member variables----
     GLUI *glui; //GLUI window
 
-    GLUI_RadioGroup *view_group;
+    GLUI_RadioGroup *advanced_group, *lookAt_group, *projection_group;
     int lighting;
     int drawAxes;
-    float translate_xy[2];        //  Translation XY Live Variable
-    float translate_z;        //  Translation Z Live Variable
+    int which_lookat, which_advanced, which_projection;
+    float translate_xy[2];     //  Translation XY Live Variable
+    float translate_z;         //  Translation Z Live Variable
     float rotation_matrix[16]; //  Rotation Matrix Live Variable Array
-    
-    
+
+
     float scale;
     float zoom;
+    GLUI_Panel *lookAtPanel, *perspectivePanel, *advancedPanel;
     //----gluLookat----
+    float newX, newY, newZ;
     float eyeX, eyeY, eyeZ; // eye position
-    GLUI_Spinner *spinner0, *spinner1, *spinner2, *spinner3;
+    GLUI_Scrollbar *slider0, *slider1, *slider2, *slider3;
 
     float lookX, lookY, lookZ; // look at position
-    GLUI_Spinner *spinner4, *spinner5, *spinner6;
 
     float upX, upY, upZ; // up vector
-    GLUI_Spinner *spinner7, *spinner8, *spinner9;
 
     //----gluPerspective----
-    float viewAngle, aspectRatio, near, far; 
-    GLUI_Spinner *spinner10, *spinner11,*spinner12, *spinner13;
+    float viewAngle, aspectRatio, near, far;
+    GLUI_Scrollbar *slider4, *slider5, *slider6, *slider7;
 
     //----glOrtho----
-    float left, right, bottom, top, onear, ofar; 
-    GLUI_Spinner *spinner14, *spinner15, *spinner16, *spinner17, *spinner18,*spinner19;
+    float newLeft, newRight, newBottom, newTop, newNear, newFar;
+    float left, right, bottom, top, onear, ofar;
+    GLUI_Scrollbar *slider8, *slider9, *slider10, *slider11, *slider12, *slider13;
 
     //----glfrustum----
-    float fleft, fright, fbottom, ftop, fnear, ffar; 
-    GLUI_Spinner *spinner20, *spinner21, *spinner22, *spinner23, *spinner24, *spinner25;
-//    Shape* movableShape;
+    float fleft, fright, fbottom, ftop, fnear, ffar;
 };
 
 #endif /*CONTROLPANEL_H_*/

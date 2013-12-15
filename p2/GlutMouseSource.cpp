@@ -12,7 +12,7 @@
 //compatible with windows and linux operating systems
 // glut.h includes GL.h and glu.h
 #if  defined( __linux__ ) || defined( __CYGWIN__ )
-   #include <GL/glui.h>
+   #include <GLUI/glui.h>
 #else 
    #include <glui.h>
 #endif 

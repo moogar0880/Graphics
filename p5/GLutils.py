@@ -6,7 +6,9 @@ import os
 import wx
 
 class Color(object):
-    '''docstring for Color'''
+    """
+    RGBA Color object
+    """
     def __init__(self, r=0.0, g=0.0, b=0.0, a=1.0):
         super(Color, self).__init__()
         self.red = r
@@ -15,44 +17,67 @@ class Color(object):
         self.alpha = a
 
 class Scene(object):
-    '''docstring for Scene'''
+    """
+    A Scene capable of maintaining a collection of 2D objects
+    """
     def __init__(self):
         super(Scene, self).__init__()
         self.shapes = []
         self.rubberbanding = False
         self.rbX = self.rbY = 0
 
-    def addShape(self, newShape=None):
-        if newShape != None:
-            self.shapes.append(newShape)
+    def addShape(self, new_shape=None):
+        """
+        Add a shape to this scene
+        @param new_shape: New Shape to add to this scene
+        """
+        if new_shape != None:
+            self.shapes.append(new_shape)
 
     def clear(self):
+        """
+        Clear all of the shapes from this scene
+        """
         self.shapes = []
 
     def redraw(self):
+        """
+        Redraw all of the components of this scene
+        """
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         for shape in self.shapes:
             shape.redraw()
         glFlush()
 
     def set_x_loc(self, x):
+        """
+        Set the x location of the last object added to this scene
+        @param x: the x location for the object
+        """
         if self.shapes != []:
-            self.shapes[-1].setLocation(x, self.shapes[-1].getY())
+            self.shapes[-1].set_location(x, self.shapes[-1].getY())
 
     def set_y_loc(self, y):
+        """
+        Set the y location of the last object added to this scene
+        @param y: the y location for the object
+        """
         if self.shapes != []:
-            self.shapes[-1].setLocation(self.shapes[-1].getX(), y)
+            self.shapes[-1].set_location(self.shapes[-1].getX(), y)
 
     def set_location(self, x, y):
-        self.shapes[-1].setLocation(x, y)
+        """
+        Set the x, y location of the last object added to this scene
+        @param x: the x location for the object
+        @param y: the y location for the object
+        """
+        self.shapes[-1].set_location(x, y)
         self.redraw()
 
-    def get_location(self):
-        shape = self.shapes[0]
-        return (shape.getX(), shape.getY())
-
 class Scene3D(object):
-    """docstring for Scene3D"""
+    """
+    A Scene capable of maintaining a collection of 3D objects
+    """
     def __init__(self):
         super(Scene3D, self).__init__()
         self.shapes = []
@@ -65,21 +90,33 @@ class Scene3D(object):
         self.init = False
         self.reset_view()
 
-    def add_object(self, obj):
-        self.shapes.append(obj)
+    def add_object(self, new_shape=None):
+        """
+        Add a shape to this scene
+        @param new_shape: New Shape to add to this scene
+        """
+        self.shapes.append(new_shape)
 
     def clear(self):
+        """
+        Clear all of the shapes from this scene
+        """
         self.shapes = []
         self.redraw()
 
     def reset_view(self):
-        # self.set_look_at(10, 3, 10, 0, 0, 0, 0, 1, 0)
-        self.set_look_at(0.0, 0.0, 5.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0)
+        """
+        Reset the view for this scene
+        """
+        self.set_look_at(10, 3, 10, 0, 0, 0, 0, 1, 0)
         self.set_perspective(10, 1.33, 0.1, 100.0)
         self.init = True
 
     def set_look_at(self, eye_x, eye_y, eye_z, look_x, look_y, look_z, up_x,
                     up_y, up_z):
+        """
+        Set the lookat parameters for this scene
+        """
         self.eye_x  = eye_x
         self.eye_y  = eye_y
         self.eye_z  = eye_z
@@ -91,29 +128,43 @@ class Scene3D(object):
         self.up_z   = up_z
 
     def look_at(self):
+        """
+        Return the lookat parameters for this scene
+        """
         return (self.eye_x, self.eye_y, self.eye_z, self.look_x, self.look_y,
                 self.look_z, self.up_x, self.up_y, self.up_z)
 
-    def set_perspective(self, angle, ratio, near, far):
-        self.view_angle = float(angle)
-        self.aspect_ratio = ratio
-        self.near = near
-        self.far = far
+    def set_perspective(self, angle=None, ratio=None, near=None, far=None):
+        """
+        Set the perspective for this scene
+        """
+        self.view_angle = angle or self.view_angle
+        self.aspect_ratio = ratio or self.aspect_ratio
+        self.near = near or self.near
+        self.far = far or self.far
 
     def eye(self):
+        """
+        Return the eye values for this scene
+        """
         return self.eye_x, self.eye_y, self.eye_z
 
     def look(self):
+        """
+        Return the lookat values for this scene
+        """
         return self.look_x, self.look_y, self.look_z
 
     def up(self):
+        """
+        Return the up values for this scene
+        """
         return self.up_x, self.up_y, self.up_z
 
     def perspective(self):
         return self.view_angle, self.aspect_ratio, self.near, self.far
 
     def redraw(self):
-        # print self.shapes
         for shape in self.shapes:
             shape.redraw()
         glFlush()
@@ -151,13 +202,38 @@ class Scene3D(object):
 
 class Texture(wx.Image):
     """docstring for Texture"""
-    def __init__(self, image='Sunrise.jpg'):
-        self.texture_id = glGenTextures()
-        wx.Image.__init__(self, image)
+    def __init__(self, name='Sunrise.jpg'):
+        wx.Image.__init__(self, name)
+
+    def load_jpeg(self, file_name):
+        height = self.GetHeight()
+        width  = self.GetWidth()
+        image  = self.GetData()
+        print width, height
+        self.texture_id = glGenTextures(1)
+        # glBindTexture(GL_TEXTURE_2D, self.texture_id)
+        # glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT )
+        # glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT )
+        # glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR )
+        # glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR )
+        # # map the image data to the texture. note that if the input
+        # # type is GL_FLOAT, the values must be in the range [0..1]
+        # glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_LUMINANCE,
+        #              GL_UNSIGNED_BYTE, image)
+
+        # glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR )
+        # glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR )
+        # gluBuild2DMipmaps(GL_TEXTURE_2D, 3, width, height, GL_RGBA, 
+        #                   GL_UNSIGNED_BYTE, image)
 
     def enable(self):
-        glEnable( GL_TEXTURE_2D );
-        glBindTexture( GL_TEXTURE_2D, self.texture_id )
+        # glEnable( GL_TEXTURE_2D );
+        # glBindTexture( GL_TEXTURE_2D, self.texture_id )
+        glEnable(GL_TEXTURE_2D)
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
+        glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL)
+        glBindTexture(GL_TEXTURE_2D, self.texture_id)
 
     def disable(self):
         glDisable( GL_TEXTURE_2D )

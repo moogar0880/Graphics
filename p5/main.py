@@ -1,4 +1,8 @@
 #!/usr/bin/env python
+"""
+Maintains the main window for the app and handles building all of the menus and 
+scenes
+"""
 import wx
 from OpenGL.GLUT import *
 from demos import Demo1, Demo2, Demo3, Demo4, Demo5, P5
@@ -37,8 +41,18 @@ PERSPECTIVE_ANGLE = 6012
 PERSPECTIVE_RATIO = 6013
 PERSPECTIVE_NEAR  = 6014
 PERSPECTIVE_FAR   = 6015
+BOX_BUTTON    = 7001
+CLOWN_BUTTON  = 7002
+DONUT_BUTTON  = 7003
+EYE_BUTTON    = 7004
+HEAD_BUTTON   = 7005
+SNOW_BUTTON   = 7006
+SPHERE_BUTTON = 7007
 #----------------------------------------------------------------------
 class MyParentFrame(wx.MDIParentFrame):
+    """
+    The main frame for the app
+    """
     def __init__(self):
         wx.MDIParentFrame.__init__(self, None, -1, '770W P5 (Beta)', size=(1000,700),
                         style=wx.DEFAULT_FRAME_STYLE | wx.HSCROLL | wx.VSCROLL)
@@ -106,21 +120,37 @@ class MyParentFrame(wx.MDIParentFrame):
 
         self.win3 = wx.SashLayoutWindow(self, ID_WINDOW_RIGHT, style=wx.NO_BORDER|wx.SW_3D)
         self.windowRight = None
-        self.OnButton(P5_BUTTOM)
+        self.OnButton(DEMO1_BUTTOM)
 
         self.SetAutoLayout(True)
         win.Show(True)
 
     def lights_on_off(self, event):
+        """
+        Toggle the lighting in the scene being on or off
+        """
         self.windowRight.flicker_lights()
 
     def set_x_loc(self, event):
+        """
+        Set the x location of the most recent element in the scene
+        """
         self.windowRight.set_x(event.Int)
 
     def set_y_loc(self, event):
+        """
+        Set the y location of the most recent element in the scene
+        """
         self.windowRight.set_y(event.Int)
 
     def demo3_controls(self, win, x, y):
+        """
+        Build the menu for Demo3 in the specified window and at the specified
+        location
+        @param win: the window for the controls to be added to
+        @param x: the x location for this menu to be added at
+        @param y: the y location for this menu to be added at
+        """
         sizer = wx.FlexGridSizer(cols=1, hgap=20, vgap=20)
         win.SetDefaultSize((200, 1000))
         win.SetOrientation(wx.LAYOUT_VERTICAL)
@@ -138,14 +168,14 @@ class MyParentFrame(wx.MDIParentFrame):
         x_slider = wx.Slider(win, id=X_SLIDER, pos=(10, 100), style=wx.SL_HORIZONTAL|wx.SL_AUTOTICKS|wx.SL_LABELS)
         x_slider.SetMax(800)
         x_slider.SetMin(-100)
-        x_slider.SetValue(0)
+        x_slider.SetValue(300)
         self.Bind(wx.EVT_SLIDER, self.set_x_loc, id=X_SLIDER)
         sizer.Add(x_slider)
         wx.StaticText(win, id=-1, label='Y Location', pos=(10, 145))
         y_slider = wx.Slider(win, id=Y_SLIDER, pos=(10, 155), style=wx.SL_HORIZONTAL|wx.SL_AUTOTICKS|wx.SL_LABELS)
         y_slider.SetMax(800)
         y_slider.SetMin(-100)
-        y_slider.SetValue(0)
+        y_slider.SetValue(50)
         self.Bind(wx.EVT_SLIDER, self.set_y_loc, id=Y_SLIDER)
         sizer.Add(y_slider)
         border = wx.BoxSizer(wx.VERTICAL)
@@ -153,6 +183,13 @@ class MyParentFrame(wx.MDIParentFrame):
         return win
 
     def demo4_controls(self, win, x, y):
+        """
+        Build the menu for Demo4 in the specified window and at the specified
+        location
+        @param win: the window for the controls to be added to
+        @param x: the x location for this menu to be added at
+        @param y: the y location for this menu to be added at
+        """
         sizer = wx.FlexGridSizer(cols=1, hgap=20, vgap=20)
         win.SetDefaultSize((200, 1000))
         win.SetOrientation(wx.LAYOUT_VERTICAL)
@@ -185,6 +222,13 @@ class MyParentFrame(wx.MDIParentFrame):
         return win
 
     def p5_controls(self, win, x, y):
+        """
+        Build the menu for P5 in the specified window and at the specified
+        location
+        @param win: the window for the controls to be added to
+        @param x: the x location for this menu to be added at
+        @param y: the y location for this menu to be added at
+        """
         sizer = wx.FlexGridSizer(cols=1, hgap=20, vgap=20)
         win.SetDefaultSize((200, 1000))
         win.SetOrientation(wx.LAYOUT_VERTICAL)
@@ -259,7 +303,7 @@ class MyParentFrame(wx.MDIParentFrame):
         self.angle_slider.SetMax(255)
         self.angle_slider.SetMin(0)
         self.angle_slider.SetValue(10)
-        self.Bind(wx.EVT_SLIDER, self.set_red_light, id=PERSPECTIVE_ANGLE)
+        self.Bind(wx.EVT_SLIDER, self.set_angle, id=PERSPECTIVE_ANGLE)
         sizer.Add(self.angle_slider)
 
         wx.StaticText(win, id=-1, label='Aspect Ratio', pos=(10, 390))
@@ -267,35 +311,122 @@ class MyParentFrame(wx.MDIParentFrame):
         self.ratio_slider.SetMax(255)
         self.ratio_slider.SetMin(0)
         self.ratio_slider.SetValue(1.33)
-        self.Bind(wx.EVT_SLIDER, self.set_red_light, id=PERSPECTIVE_RATIO)
+        self.Bind(wx.EVT_SLIDER, self.set_ratio, id=PERSPECTIVE_RATIO)
         sizer.Add(self.ratio_slider)
 
         wx.StaticText(win, id=-1, label='Near', pos=(10, 435))
         self.near_slider = wx.Slider(win, id=PERSPECTIVE_NEAR, pos=(10, 440), style=wx.SL_HORIZONTAL|wx.SL_AUTOTICKS|wx.SL_LABELS)
         self.near_slider.SetMax(255)
-        self.near_slider.SetMin(0)
+        self.near_slider.SetMin(0.1)
         self.near_slider.SetValue(0.1)
-        self.Bind(wx.EVT_SLIDER, self.set_red_light, id=PERSPECTIVE_NEAR)
+        self.Bind(wx.EVT_SLIDER, self.set_near, id=PERSPECTIVE_NEAR)
         sizer.Add(self.near_slider)
 
         wx.StaticText(win, id=-1, label='Far', pos=(10, 475))
         self.far_slider = wx.Slider(win, id=PERSPECTIVE_FAR, pos=(10, 480), style=wx.SL_HORIZONTAL|wx.SL_AUTOTICKS|wx.SL_LABELS)
         self.far_slider.SetMax(255)
         self.far_slider.SetMin(0)
-        self.far_slider.SetValue(100.0)
-        self.Bind(wx.EVT_SLIDER, self.set_red_light, id=PERSPECTIVE_FAR)
+        self.far_slider.SetValue(10.0)
+        self.Bind(wx.EVT_SLIDER, self.set_far, id=PERSPECTIVE_FAR)
         sizer.Add(self.far_slider)
+
+        box_b = wx.Button(win, id=BOX_BUTTON, label='Add Box', pos=(2, 520))
+        self.Bind(wx.EVT_BUTTON, self.add_box, id=BOX_BUTTON)
+        sizer.Add(box_b)
+
+        clown_b = wx.Button(win, id=CLOWN_BUTTON, label='Add Clown', pos=(90, 520))
+        self.Bind(wx.EVT_BUTTON, self.add_clown, id=CLOWN_BUTTON)
+        sizer.Add(clown_b)
+
+        donut_b = wx.Button(win, id=DONUT_BUTTON, label='Add Donut', pos=(2, 545))
+        self.Bind(wx.EVT_BUTTON, self.add_donut, id=DONUT_BUTTON)
+        sizer.Add(donut_b)
+
+        eye_button = wx.Button(win, id=EYE_BUTTON, label='Add Eye', pos=(90, 545))
+        self.Bind(wx.EVT_BUTTON, self.add_eye, id=EYE_BUTTON)
+        sizer.Add(eye_button)
+
+        head_button = wx.Button(win, id=HEAD_BUTTON, label='Add Head', pos=(2, 570))
+        self.Bind(wx.EVT_BUTTON, self.add_head, id=HEAD_BUTTON)
+        sizer.Add(head_button)
+
+        sphere_button = wx.Button(win, id=SPHERE_BUTTON, label='Add Sphere', pos=(90, 570))
+        self.Bind(wx.EVT_BUTTON, self.add_sphere, id=SPHERE_BUTTON)
+        sizer.Add(sphere_button)
+
+        snow_button = wx.Button(win, id=SNOW_BUTTON, label='Add Snowman', pos=(2, 595))
+        self.Bind(wx.EVT_BUTTON, self.add_snowman, id=SNOW_BUTTON)
+        sizer.Add(snow_button)
 
         border = wx.BoxSizer(wx.VERTICAL)
         border.Add(sizer, 0, wx.ALL, 25)
         return win
 
+    def add_box(self, event):
+        """
+        Callback function for the Add Box button
+        """
+        print 'Add Box'
+        self.windowRight.add_box()
+
+    def add_clown(self, event):
+        """
+        Callback function for the Add Clown button
+        """
+        print 'Add Clown'
+        self.windowRight.add_clown()
+
+    def add_donut(self, event):
+        """
+        Callback function for the Add Donut button
+        """
+        print 'Add Donut'
+        self.windowRight.add_donut()
+
+    def add_eye(self, event):
+        """
+        Callback function for the Add Eye button
+        """
+        print 'Add Eye'
+        self.windowRight.add_eye()
+
+    def add_head(self, event):
+        """
+        Callback function for the Add Head button
+        """
+        print 'Add Head'
+        self.windowRight.add_head()
+
+    def add_sphere(self, event):
+        """
+        Callback function for the Add Sphere button
+        """
+        print 'Add Sphere'
+        self.windowRight.add_sphere()
+
+    def add_snowman(self, event):
+        """
+        Callback function for the Add Snowman button
+        """
+        print 'Add Snowman'
+        self.windowRight.add_snowman()
+
     def set_projection_type(self, event):
+        """
+        Callback function for the set projection type radio buttons
+        @param event: The current status of the event responsible for calling 
+                      this method
+        """
         print event.String
         p_type = event.String
         self.windowRight.set_projection_type(p_type)
 
     def set_look_at_type(self, event):
+        """
+        Callback function for set lookat type radio buttons
+        @param event: The current status of the event responsible for calling 
+                      this method
+        """
         print event.String
         l_type = event.String
         self.l_type = l_type
@@ -317,6 +448,12 @@ class MyParentFrame(wx.MDIParentFrame):
             self.look_z_slider.SetValue(up_z)
 
     def set_look_at_x(self, event):
+        """
+        Callback function for changing the x value for the currently selected 
+        parameter
+        @param event: The current status of the event responsible for calling 
+                      this method
+        """
         new_x = event.Int
         print new_x
         if self.l_type == 'Eye':
@@ -328,6 +465,12 @@ class MyParentFrame(wx.MDIParentFrame):
         self.windowRight.redraw()
 
     def set_look_at_y(self, event):
+        """
+        Callback function for changing the y value for the currently selected 
+        parameter
+        @param event: The current status of the event responsible for calling 
+                      this method
+        """
         new_y = event.Int
         print new_y
         if self.l_type == 'Eye':
@@ -339,6 +482,12 @@ class MyParentFrame(wx.MDIParentFrame):
         self.windowRight.redraw()
 
     def set_look_at_z(self, event):
+        """
+        Callback function for changing the z value for the currently selected 
+        parameter
+        @param event: The current status of the event responsible for calling 
+                      this method
+        """
         new_z = event.Int
         print new_z
         if self.l_type == 'Eye':
@@ -349,14 +498,65 @@ class MyParentFrame(wx.MDIParentFrame):
             self.windowRight.set_look_at(up_z=new_z)
         self.windowRight.redraw()
 
+    def set_draw_axes(self, event):
+        """
+        Callback function for toggling the draw axes checkbox
+        @param event: The current status of the event responsible for calling 
+                      this method
+        """
+        self.windowRight.toggle_draw_axes()
+
+    def set_angle(self, event):
+        """
+        Callback function for the set angle slider
+        @param event: The current status of the event responsible for calling 
+                      this method
+        """
+        print event.Int
+        self.windowRight.set_angle(event.Int)
+
+    def set_ratio(self, event):
+        """
+        Callback function for the set ratio slider
+        @param event: The current status of the event responsible for calling 
+                      this method
+        """
+        print event.Int
+        self.windowRight.set_ratio(event.Int)
+
+    def set_near(self, event):
+        """
+        Callback function for the set near slider
+        @param event: The current status of the event responsible for calling 
+                      this method
+        """
+        print event.Int
+        self.windowRight.set_near(event.Int)
+
+    def set_far(self, event):
+        """
+        Callback function for the set far slider
+        @param event: The current status of the event responsible for calling 
+                      this method
+        """
+        print event.Int
+        self.windowRight.set_far(event.Int)
+
     def set_red_light(self, event):
+        """
+        Callback function for the set red light slider
+        @param event: The current status of the event responsible for calling 
+                      this method
+        """
         print event.Int
         self.windowRight.set_red_light(event.Int)
 
-    def set_draw_axes(self, event):
-        self.windowRight.toggle_draw_axes()
-
     def prev_scene(self, event):
+        """
+        Callback function for the previous scene button
+        @param event: The current status of the event responsible for calling 
+                      this method
+        """
         self.windowRight.prev_scene()
         try:
             scene = self.windowRight.get_scene()
@@ -375,10 +575,20 @@ class MyParentFrame(wx.MDIParentFrame):
                 self.look_x_slider.SetValue(up_x)
                 self.look_y_slider.SetValue(up_y)
                 self.look_z_slider.SetValue(up_z)
+            perspective = scene.perspective()
+            self.angle_slider.SetValue(perspective[0])
+            self.ratio_slider.SetValue(perspective[1])
+            self.near_slider.SetValue(perspective[2])
+            self.far_slider.SetValue(perspective[3])
         except Exception:
             pass
 
     def next_scene(self, event):
+        """
+        Callback function for the next scene button
+        @param event: The current status of the event responsible for calling 
+                      this method
+        """
         self.windowRight.next_scene()
         try:
             scene = self.windowRight.get_scene()
@@ -397,10 +607,20 @@ class MyParentFrame(wx.MDIParentFrame):
                 self.look_x_slider.SetValue(up_x)
                 self.look_y_slider.SetValue(up_y)
                 self.look_z_slider.SetValue(up_z)
+            perspective = scene.perspective()
+            self.angle_slider.SetValue(perspective[0])
+            self.ratio_slider.SetValue(perspective[1])
+            self.near_slider.SetValue(perspective[2])
+            self.far_slider.SetValue(perspective[3])
         except Exception:
             pass
 
     def OnButton(self, event):
+        """
+        Callback function for demo buttons
+        @param event: The current status of the event responsible for calling 
+                      this method
+        """
         try:
             event_id = event.GetId()
         except AttributeError:
@@ -443,12 +663,22 @@ class MyParentFrame(wx.MDIParentFrame):
             print 'ERROR: Invalid Button Input Received'
 
     def OnSize(self, event):
+        """
+        Callback function for handing window resizing
+        @param event: The current status of the event responsible for calling 
+                      this method
+        """
         wx.LayoutAlgorithm().LayoutFrame(self)
 
     def OnExit(self, evt):
+        """
+        General Callback function for exiting the app
+        @param event: The current status of the event responsible for calling 
+                      this method
+        """
         print 'Exiting...'
         self.Close(True)
-#----------------------------------------------------------------------
+
 if __name__ == '__main__':
     class MyApp(wx.App):
         def OnInit(self):

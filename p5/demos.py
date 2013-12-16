@@ -18,6 +18,7 @@ WINDOW_HEIGHT = 600
 
 class MyCanvasBase(glcanvas.GLCanvas):
     """
+    Base class for all OpenGL scenes to be drawn on
     """
     def __init__(self, parent):
         glcanvas.GLCanvas.__init__(self, parent, -1)
@@ -70,7 +71,7 @@ class MyCanvasBase(glcanvas.GLCanvas):
 
 class Demo1(MyCanvasBase):
     """
-    docstring for Demo1
+    PyOpenGL demo for Demo1
     """
     def appInit(self):
         self.shapes = []
@@ -105,7 +106,7 @@ class Demo1(MyCanvasBase):
 
 class Demo2(MyCanvasBase):
     """
-    docstring for Demo2
+    PyOpenGL demo for Demo2
     """
     def appInit(self):
         self.shapes = []
@@ -181,7 +182,7 @@ class Demo2(MyCanvasBase):
 
 class Demo3(MyCanvasBase):
     """
-    docstring for Demo3
+    PyOpenGL demo for Demo3
     """
     def appInit(self):
         glClearColor(1.0, 1.0, 1.0, 1.0)
@@ -232,7 +233,7 @@ class Demo3(MyCanvasBase):
 
 class Demo4(MyCanvasBase):
     """
-    docstring for Demo4
+    PyOpenGL demo for Demo4
     """
     def __init__(self, parent):
         super(Demo4, self).__init__(parent)
@@ -384,7 +385,9 @@ class Demo4(MyCanvasBase):
         self.appInit()
         scene = self.scenes[self.current_scene]
         angle, ratio, near, far = scene.perspective()
+        print angle, ratio, near, far
         eye_x, eye_y, eye_z, look_x, look_y, look_z, up_x, up_y, up_z = scene.look_at()
+        print eye_x, eye_y, eye_z, look_x, look_y, look_z, up_x, up_y, up_z
 
         glMatrixMode(GL_PROJECTION)
         gluPerspective(angle, ratio, near, far)
@@ -401,7 +404,7 @@ class Demo4(MyCanvasBase):
 
 class Demo5(MyCanvasBase):
     """
-    docstring for Demo5
+    PyOpenGL demo for Demo5
     """
     def __init__(self, parent):
         super(Demo5, self).__init__(parent)
@@ -430,6 +433,7 @@ class Demo5(MyCanvasBase):
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
         self.texture = Texture()
+        self.texture.load_jpeg('Sunrise.jpg')
         self.x2yAspect = self.texture.GetWidth()/self.texture.GetHeight()
         glutReshapeFunc(self.reshape)
         glutDisplayFunc(self.redraw)
@@ -466,6 +470,19 @@ class Demo5(MyCanvasBase):
 
         glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT )
         self.SetCurrent()
+        texture_id = self.texture.texture_id
+        width = self.texture.GetWidth()
+        height = self.texture.GetHeight()
+
+        glBindTexture(GL_TEXTURE_2D, texture_id)
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT )
+        glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT )
+        glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR )
+        glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR )
+        # map the image data to the texture. note that if the input
+        # type is GL_FLOAT, the values must be in the range [0..1]
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_LUMINANCE,
+                     GL_UNSIGNED_BYTE, self.texture.GetData())
         self.texture.enable()
 
         glTranslatef( 0.0, 0.0, -5.0 )
@@ -473,9 +490,6 @@ class Demo5(MyCanvasBase):
         yscale = 1.75
         xscale = yscale * self.x2yAspect
 
-        glEnable(GL_TEXTURE_2D)
-        glBindTexture(GL_TEXTURE_2D,self.texture.texture_id)
-        glColor3f( 1, 1, 1 )
         glScalef( xscale, yscale, 2.0 )
 
         glBegin( GL_QUADS )
@@ -501,7 +515,7 @@ class Demo5(MyCanvasBase):
 
 class P5(MyCanvasBase):
     """
-    docstring for P5
+    PyOpenGL rendition of P2
     """
     def __init__(self, parent):
         super(P5, self).__init__(parent)
@@ -543,18 +557,9 @@ class P5(MyCanvasBase):
         return sphere
 
     def make_simple_scenes(self):
-        snow = Snowman()
-        snow.set_location( 0, 0, 0 )
-        snow.set_size( 1, 1, 1 )
-        self.objects.append( snow )
-
-        snowScene = Scene3D()
-        snowScene.add_object( snow )
-        self.scenes.append( snowScene )
-
         clown = Clown()
         clown.set_location( 0, 0, 0 )
-        clown.set_size( 1,1,1 )
+        clown.set_size( 1, 1, 1 )
         self.objects.append( clown )
 
         clown1Scene = Scene3D()
@@ -563,7 +568,7 @@ class P5(MyCanvasBase):
 
         head = Head()
         head.set_location( 0, 0, 0 )
-        head.set_size( 1, 1, 1 )
+        head.set_size( 1.5, 1.5, 1.5 )
         self.objects.append( head )
 
         headScene = Scene3D()
@@ -572,7 +577,7 @@ class P5(MyCanvasBase):
 
         hat = Hat()
         hat.set_location( 0, 0, 0 )
-        hat.set_size( 0.5, 0.5, 0.5 )
+        hat.set_size( 1.5, 1.5, 1.5 )
         self.objects.append( hat )
 
         hat1Scene = Scene3D()
@@ -580,9 +585,9 @@ class P5(MyCanvasBase):
         self.scenes.append( hat1Scene )
 
         eye = Eye()
-        eye.set_color(1, 0, 0 )
-        eye.set_location( 0, 1, 1 )
-        eye.set_size( 0.5, 0.5, 0.5 )
+        eye.set_color(1, 0, 0)
+        eye.set_location(0, 1, 1)
+        eye.set_size(1.3, 1.3, 1.3)
         eye.set_rotate( 45, 1, 0, 0 )
         self.objects.append( eye )
 
@@ -593,7 +598,7 @@ class P5(MyCanvasBase):
         donut = Donut()
         donut.set_color(1, 0, 1 )
         donut.set_location( 0, 0, 0 )
-        donut.set_size( 1.0, 1.0, 1.0 )
+        donut.set_size( 2.0, 2.0, 2.0 )
         donut.set_rotate( 45, 0, 1, 0)
         self.objects.append( donut )
 
@@ -604,7 +609,7 @@ class P5(MyCanvasBase):
         cone = Cone()
         cone.set_color( 1, 0, 1 )
         cone.set_location( 0, 0, 0 )
-        cone.set_size( 1.0, 1.0, 1.0 )
+        cone.set_size( 2.0, 2.0, 2.0 )
         self.objects.append( cone )
 
         cone1Scene = Scene3D()
@@ -620,6 +625,7 @@ class P5(MyCanvasBase):
 
         box2 = self.make_box( 1, Color(0, 1, 1 ))
         box2.set_rotate( 45, 0, 0, 1 )
+        box2.set_size(2.0, 2.0, 2.0)
         self.objects.append( box2 )
 
         box2Scene = Scene3D()
@@ -627,6 +633,7 @@ class P5(MyCanvasBase):
         self.scenes.append( box2Scene )
 
         sp = self.make_ball(1, Color(0.8, 0.8, 0))
+        sp.set_size(2.0, 2.0, 2.0)
         self.objects.append( sp )
 
         ballScene = Scene3D()
@@ -698,7 +705,7 @@ class P5(MyCanvasBase):
         self.make_multi_object_scene()
 
     def draw_coordinate_axes(self):
-        scale = 1.8
+        scale = 5.0
         glPushMatrix()
 
         glScalef(scale, scale, scale)
@@ -740,13 +747,63 @@ class P5(MyCanvasBase):
     def get_scene(self):
         return self.scenes[self.current_scene]
 
+    def set_angle(self, value):
+        scene = self.scenes[self.current_scene]
+        scene.set_perspective(angle=value)
+        angle, ratio, near, far = scene.perspective()
+        self.redraw()
+
+    def set_ratio(self, value):
+        scene = self.scenes[self.current_scene]
+        scene.set_perspective(ratio=value)
+        self.redraw()
+
+    def set_near(self, value):
+        scene = self.scenes[self.current_scene]
+        scene.set_perspective(near=value)
+        self.redraw()
+
+    def set_far(self, value):
+        scene = self.scenes[self.current_scene]
+        scene.set_perspective(far=value)
+        self.redraw()
+
+    def add_box(self):
+        self.scenes[self.current_scene].add_object(Box())
+        self.redraw()
+
+    def add_clown(self):
+        self.scenes[self.current_scene].add_object(Clown())
+        self.redraw()
+
+    def add_donut(self):
+        self.scenes[self.current_scene].add_object(Donut())
+        self.redraw()
+
+    def add_eye(self):
+        self.scenes[self.current_scene].add_object(Eye())
+        self.redraw()
+
+    def add_head(self):
+        self.scenes[self.current_scene].add_object(Head())
+        self.redraw()
+
+    def add_sphere(self):
+        self.scenes[self.current_scene].add_object(Sphere())
+        self.redraw()
+
+    def add_snowman(self):
+        self.scenes[self.current_scene].add_object(Snowman())
+        self.redraw()
+
     def redraw(self):
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
         scene = self.scenes[self.current_scene]
         parallel = scene.projection_type()
         angle, ratio, near, far = scene.perspective()
-        gluPerspective(angle, ratio, near, far)
+        # gluPerspective(angle, ratio, near, far)
+        print angle, ratio, near, far
         if parallel:
             left, right, bottom, top, near, far = scene.ortho()
             glOrtho(left, right, bottom, top, near, far)
@@ -758,7 +815,7 @@ class P5(MyCanvasBase):
         glLoadIdentity()
         look_at = scene.look_at()
 
-        print look_at[0], look_at[1], look_at[2], look_at[3], look_at[4], look_at[5], look_at[6], look_at[7], look_at[8]
+        print ';;', look_at[0], look_at[1], look_at[2], look_at[3], look_at[4], look_at[5], look_at[6], look_at[7], look_at[8]
         gluLookAt(look_at[0], look_at[1], look_at[2],
                   look_at[3], look_at[4], look_at[5],
                   look_at[6], look_at[7], look_at[8])
@@ -767,3 +824,4 @@ class P5(MyCanvasBase):
             self.draw_coordinate_axes()
         scene.redraw()
         self.SwapBuffers()
+        glFlush()

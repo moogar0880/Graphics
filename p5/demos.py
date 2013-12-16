@@ -7,9 +7,8 @@ from shapes import Triangle, Box, Sphere, Cone, Donut, Eye, Hat, Head, \
                    Snowman, Clown
 from GLutils import Color, Scene, Scene3D, Texture
 import os
-import argparse
 import wx
-from wx import glcanvas, Panel
+from wx import glcanvas
 
 ID_WINDOW_MIDD = 5002
 
@@ -37,18 +36,30 @@ class MyCanvasBase(glcanvas.GLCanvas):
         self.Bind(wx.EVT_MOTION, self.OnMouseMotion)
 
     def OnEraseBackground(self, event):
+        """
+        Handle erasing the background
+        """
         pass # Do nothing, to avoid flashing on MSW.
 
     def OnSize(self, event):
+        """
+        Handle sizing the window
+        """
         wx.CallAfter(self.DoSetViewport)
         event.Skip()
 
     def DoSetViewport(self):
+        """
+        Set the wx Viewport
+        """
         size = self.size = self.GetClientSize()
         self.SetCurrent(self.context)
         glViewport(0, 0, size.width, size.height)
 
     def OnPaint(self, event):
+        """
+        Specify what happens on painting the window
+        """
         dc = wx.PaintDC(self)
         self.SetCurrent(self.context)
         if not self.init:
@@ -57,13 +68,22 @@ class MyCanvasBase(glcanvas.GLCanvas):
         self.redraw()
 
     def OnMouseDown(self, evt):
+        """
+        Enable mouse input capturing
+        """
         self.CaptureMouse()
         self.x, self.y = self.lastx, self.lasty = evt.GetPosition()
 
     def OnMouseUp(self, evt):
+        """
+        Enable mouse input capturing
+        """
         self.ReleaseMouse()
 
     def OnMouseMotion(self, evt):
+        """
+        Enable mouse motion capturing
+        """
         if evt.Dragging() and evt.LeftIsDown():
             self.lastx, self.lasty = self.x, self.y
             self.x, self.y = evt.GetPosition()
@@ -74,6 +94,9 @@ class Demo1(MyCanvasBase):
     PyOpenGL demo for Demo1
     """
     def appInit(self):
+        """
+        Create the scene and intitialize the shapes to be put in the scene
+        """
         self.shapes = []
         # set viewing projection
         glClearColor(1.0, 1.0, 1.0, 0.0)
@@ -98,6 +121,9 @@ class Demo1(MyCanvasBase):
         self.shapes.append(tri)
 
     def redraw(self):
+        """
+        Redraw the shapes in the scene
+        """
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         for shape in self.shapes:
             shape.redraw()
@@ -109,6 +135,9 @@ class Demo2(MyCanvasBase):
     PyOpenGL demo for Demo2
     """
     def appInit(self):
+        """
+        Setup the scene and add the shapes to it
+        """
         self.shapes = []
         glClearColor(1.0, 1.0, 1.0, 1.0)
         glColor(0.0, 0.0, 0.0)
@@ -135,6 +164,9 @@ class Demo2(MyCanvasBase):
         self.Bind(wx.EVT_CONTEXT_MENU, self.OnContextMenu)
 
     def redraw(self):
+        """
+        Redraw the shapes in the scene
+        """
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         for shape in self.shapes:
             shape.redraw()
@@ -142,13 +174,11 @@ class Demo2(MyCanvasBase):
         self.SwapBuffers()
 
     def OnContextMenu(self, event):
+        """
+        Handle the right click context menu for the scene
+        """
         print 'OnContextMenu\n'
-
         # only do this part the first time so the events are only bound once
-        #
-        # Yet another anternate way to do IDs. Some prefer them up top to
-        # avoid clutter, some prefer them close to the object of interest
-        # for clarity.
         if not hasattr(self, 'popupID1'):
             self.popupID1 = wx.NewId()
             self.popupID2 = wx.NewId()
@@ -170,14 +200,23 @@ class Demo2(MyCanvasBase):
         menu.Destroy()
 
     def clear_scene(self, event):
+        """
+        Clear the current scene
+        """
         self.shapes = []
         self.redraw()
 
     def redraw_menu(self, event):
+        """
+        Redraw the current scene
+        """
         self.appInit()
         self.redraw()
 
     def exit_menu(self, event):
+        """
+        Exit the App
+        """
         exit()
 
 class Demo3(MyCanvasBase):
@@ -185,6 +224,9 @@ class Demo3(MyCanvasBase):
     PyOpenGL demo for Demo3
     """
     def appInit(self):
+        """
+        Setup the scene and add the shapes to it
+        """
         glClearColor(1.0, 1.0, 1.0, 1.0)
         glColor(0.0, 0.0, 0.0)
         glPointSize(4.0)
@@ -210,25 +252,42 @@ class Demo3(MyCanvasBase):
         self.scene.addShape(tri)
 
     def redraw(self):
+        """
+        Redraw the current scene
+        """
         self.scene.redraw()
         self.SwapBuffers()
 
     def set_x(self, x):
+        """
+        Adjust the x location of the last shape added to the scene
+        @param x: the x location pulled from the slider
+        """
         self.scene.set_x_loc(x)
         self.redraw()
 
     def set_y(self, y):
+        """
+        Adjust the y location of the last shape added to the scene
+        @param y: the y location pulled from the slider
+        """
         self.scene.set_y_loc(y)
         self.redraw()
 
     def set_location(self, x, y):
+        """
+        Adjust the location of the last shape added to the scene
+        @param x: the x location pulled from the slider
+        @param y: the y location pulled from the slider
+        """
         self.scene.set_location(x, y)
         self.redraw()
 
-    def get_location(self):
-        self.scene.get_location()
-
     def flicker_lights(self):
+        """
+        Do nothing really, this was originally in the demo just to show that
+        checkboxes exist
+        """
         print 'Lights Set'
 
 class Demo4(MyCanvasBase):
@@ -236,6 +295,9 @@ class Demo4(MyCanvasBase):
     PyOpenGL demo for Demo4
     """
     def __init__(self, parent):
+        """
+        Create additional class variables
+        """
         super(Demo4, self).__init__(parent)
         self.scenes = []
         self.draw_axes = True
@@ -245,6 +307,9 @@ class Demo4(MyCanvasBase):
         self.diffuse_light = [0.8, 0.8, 0.8, 1]
 
     def next_scene(self):
+        """
+        Change the current scene to the next one in the list of scenes
+        """
         if self.current_scene == len(self.scenes) - 1:
             self.current_scene = 0
         else:
@@ -252,6 +317,12 @@ class Demo4(MyCanvasBase):
         self.redraw()
 
     def make_box(self, scale, color):
+        """
+        Create a Cube with the specified parameters
+        @param scale: scale factor for the cube
+        @param color: color for the cube
+        @return: the created cube
+        """
         box = Box()
         box.set_color(c=color)
         box.set_location(0, 0, 0)
@@ -259,6 +330,12 @@ class Demo4(MyCanvasBase):
         return box
 
     def make_ball(self, scale, color):
+        """
+        Create a Sphere with the specified parameters
+        @param scale: scale factor for the Sphere
+        @param color: color for the Sphere
+        @return: the created Sphere
+        """
         sphere = Sphere()
         sphere.set_location(0, 0, 0)
         sphere.set_size(scale, scale, scale)
@@ -266,6 +343,9 @@ class Demo4(MyCanvasBase):
         return sphere
 
     def make_simple_scenes(self):
+        """
+        Create a few scenes that only have one object in them
+        """
         box1 = self.make_box(1, Color(1, 0, 1))
         self.objects.append(box1)
 
@@ -289,6 +369,9 @@ class Demo4(MyCanvasBase):
         self.scenes.append(ballScene)
 
     def make_multi_object_scene(self):
+        """
+        Create a scene that has more than one object in it
+        """
         multi1 = Scene3D()
         box = self.objects[0]
         box.set_location(1, 0, 0)
@@ -302,6 +385,9 @@ class Demo4(MyCanvasBase):
         self.scenes.append(multi1)
 
     def draw_coordinate_axes(self):
+        """
+        Draw the x, y, z axes in the current scene
+        """
         glDisable(GL_LIGHTING)
         scale = 1.8
         glPushMatrix()
@@ -330,6 +416,10 @@ class Demo4(MyCanvasBase):
         glEnable(GL_LIGHTING)
 
     def set_lighting(self):
+        """
+        Enable the lighting for the scene if self.lighting is True, otherwise
+        only the default ambient lighting will be turned on
+        """
         lightPosition = [-1, 1, 1, 0]
         glLightfv(GL_LIGHT0, GL_POSITION, lightPosition)
 
@@ -345,6 +435,9 @@ class Demo4(MyCanvasBase):
             glDisable(GL_LIGHT0)
 
     def appInit(self):
+        """
+        Setup the scene for creating the objects to be placed in it
+        """
         glMatrixMode( GL_PROJECTION )
         glLoadIdentity()
         glMatrixMode( GL_MODELVIEW )
@@ -363,6 +456,9 @@ class Demo4(MyCanvasBase):
         self.make_multi_object_scene()
 
     def toggle_draw_axes(self):
+        """
+        Enable or disable drawing the axes
+        """
         if self.draw_axes:
             self.draw_axes = False
         else:
@@ -370,7 +466,9 @@ class Demo4(MyCanvasBase):
         self.redraw()
 
     def flicker_lights(self):
-        print 'Lights Set HUR'
+        """
+        Turn the lights on or off
+        """
         if self.lighting:
             self.lighting = False
         else:
@@ -378,16 +476,24 @@ class Demo4(MyCanvasBase):
         self.redraw()
 
     def set_red_light(self, value):
+        """
+        Adjust the amount of red light in the scene
+        @param value: the value of red light for the scene
+        """
         self.diffuse_light[0] = value
         self.redraw()
 
     def redraw(self):
+        """
+        Redraw the current scene and the coordinate axes if self.draw_axes is 
+        set to True
+        """
         self.appInit()
         scene = self.scenes[self.current_scene]
         angle, ratio, near, far = scene.perspective()
-        print angle, ratio, near, far
+        # print angle, ratio, near, far
         eye_x, eye_y, eye_z, look_x, look_y, look_z, up_x, up_y, up_z = scene.look_at()
-        print eye_x, eye_y, eye_z, look_x, look_y, look_z, up_x, up_y, up_z
+        # print eye_x, eye_y, eye_z, look_x, look_y, look_z, up_x, up_y, up_z
 
         glMatrixMode(GL_PROJECTION)
         gluPerspective(angle, ratio, near, far)
@@ -407,6 +513,9 @@ class Demo5(MyCanvasBase):
     PyOpenGL demo for Demo5
     """
     def __init__(self, parent):
+        """
+        Initiliaze additional class variables
+        """
         super(Demo5, self).__init__(parent)
         self.angle = 0.0
         self.replication = 1.0
@@ -422,6 +531,9 @@ class Demo5(MyCanvasBase):
         self.texture = None
 
     def appInit(self):
+        """
+        Build the scene and create the texture
+        """
         glutInitDisplayMode( GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH )
 
         glClearColor(0.4, 0.4, 0.5, 1.0)
@@ -433,12 +545,15 @@ class Demo5(MyCanvasBase):
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
         self.texture = Texture()
-        self.texture.load_jpeg('Sunrise.jpg')
+        # self.texture.load_jpeg('Sunrise.jpg')
         self.x2yAspect = self.texture.GetWidth()/self.texture.GetHeight()
         glutReshapeFunc(self.reshape)
         glutDisplayFunc(self.redraw)
 
     def reshape(self, w, h):
+        """
+        Handle reshaping the square as it rotates
+        """
         glViewport(0, 0, w, h)
 
         glMatrixMode(GL_PROJECTION)
@@ -447,6 +562,9 @@ class Demo5(MyCanvasBase):
         glutPostRedisplay()
 
     def update_spin(self):
+        """
+        Rotate the textured square
+        """
         if self.spin:
             self.angle += self.deltaAng
             self.stepsLeft -= 1
@@ -464,6 +582,10 @@ class Demo5(MyCanvasBase):
             glutPostRedisplay()
 
     def redraw(self):
+        """
+        Redraw the current scene by rotating the square and mapping the 
+        texture to it
+        """
         self.update_spin()
         glMatrixMode( GL_MODELVIEW )
         glLoadIdentity()
@@ -474,15 +596,7 @@ class Demo5(MyCanvasBase):
         width = self.texture.GetWidth()
         height = self.texture.GetHeight()
 
-        glBindTexture(GL_TEXTURE_2D, texture_id)
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT )
-        glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT )
-        glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR )
-        glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR )
-        # map the image data to the texture. note that if the input
-        # type is GL_FLOAT, the values must be in the range [0..1]
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_LUMINANCE,
-                     GL_UNSIGNED_BYTE, self.texture.GetData())
+        self.texture.load_jpeg('Sunrise.jpg')
         self.texture.enable()
 
         glTranslatef( 0.0, 0.0, -5.0 )
@@ -518,6 +632,9 @@ class P5(MyCanvasBase):
     PyOpenGL rendition of P2
     """
     def __init__(self, parent):
+        """
+        Initiliaze additional class variables
+        """
         super(P5, self).__init__(parent)
         self.shapes = []
         self.scenes = []
@@ -527,6 +644,9 @@ class P5(MyCanvasBase):
         self.draw_axes = True
 
     def next_scene(self):
+        """
+        Change the current scene to the next one in the list of scenes
+        """
         if self.current_scene == len(self.scenes) - 1:
             self.current_scene = 0
         else:
@@ -535,6 +655,9 @@ class P5(MyCanvasBase):
         self.redraw()
 
     def prev_scene(self):
+        """
+        Change the current scene to the next one in the list of scenes
+        """
         if self.current_scene == 0:
             self.current_scene = len(self.scenes) - 1
         else:
@@ -543,6 +666,12 @@ class P5(MyCanvasBase):
         self.redraw()
 
     def make_box(self, scale, color):
+        """
+        Create a Cube with the specified parameters
+        @param scale: scale factor for the cube
+        @param color: color for the cube
+        @return: the created cube
+        """
         box = Box()
         box.set_color(c=color)
         box.set_location(0, 0, 0)
@@ -550,6 +679,12 @@ class P5(MyCanvasBase):
         return box
 
     def make_ball(self, scale, color):
+        """
+        Create a Sphere with the specified parameters
+        @param scale: scale factor for the sphere
+        @param color: color for the sphere
+        @return: the created sphere
+        """
         sphere = Sphere()
         sphere.set_location(0, 0, 0)
         sphere.set_size(scale, scale, scale)
@@ -557,6 +692,9 @@ class P5(MyCanvasBase):
         return sphere
 
     def make_simple_scenes(self):
+        """
+        Create a few scenes that only have one object in them
+        """
         clown = Clown()
         clown.set_location( 0, 0, 0 )
         clown.set_size( 1, 1, 1 )
@@ -641,6 +779,9 @@ class P5(MyCanvasBase):
         self.scenes.append( ballScene )
 
     def make_multi_object_scene(self):
+        """
+        Create a scene that has multiple objects in it
+        """
         multi1 = Scene3D()
         box = self.objects[0]
         box.set_location(1, 0, 0)
@@ -654,7 +795,9 @@ class P5(MyCanvasBase):
         self.scenes.append(multi1)
 
     def flicker_lights(self):
-        print 'Lights Set HURPDURP'
+        """
+        Toggle the lights on or off
+        """
         if self.lighting:
             self.lighting = False
         else:
@@ -662,6 +805,9 @@ class P5(MyCanvasBase):
         self.redraw()
 
     def toggle_draw_axes(self):
+        """
+        Toggle drawing the axes
+        """
         if self.draw_axes:
             self.draw_axes = False
         else:
@@ -669,10 +815,26 @@ class P5(MyCanvasBase):
         self.redraw()
 
     def set_projection_type(self, p_type):
+        """
+        Set the projection type for the scene
+        @param p_type: projection type for the scene in string format
+        """
         self.scenes[self.current_scene].set_projection_type(p_type)
 
     def set_look_at(self, eye_x=None, eye_y=None, eye_z=None, look_x=None,
                     look_y=None, look_z=None, up_x=None, up_y=None, up_z=None):
+        """
+        Set the lookat variables for the scene
+        @param eye_x: x location for the eye point of the scene
+        @param eye_y: y location for the eye point of the scene
+        @param eye_z: z location for the eye point of the scene
+        @param look_x: x location for the lookat point in the scene
+        @param look_y: y location for the lookat point in the scene
+        @param look_z: z location for the lookat point in the scene
+        @param up_x: x location for the up point in the scene
+        @param up_y: y location for the up point in the scene
+        @param up_z: z location for the up point in the scene
+        """
         cur_look_at = self.scenes[self.current_scene].look_at()
         e_x = eye_x or cur_look_at[0]
         e_y = eye_y or cur_look_at[1]
@@ -688,6 +850,9 @@ class P5(MyCanvasBase):
                                                     l_z, u_x, u_y, u_z)
 
     def appInit(self):
+        """
+        Create the scene and initialize the shapes to be placed in it
+        """
         glutInitDisplayMode( GLUT_SINGLE | GLUT_RGB | GLUT_DEPTH )
         glClearColor(0.0, 0.0, 0.0, 0.0)
         glClearDepth(1.0 )
@@ -705,6 +870,9 @@ class P5(MyCanvasBase):
         self.make_multi_object_scene()
 
     def draw_coordinate_axes(self):
+        """
+        Handle drawing the x, y, z axes
+        """
         scale = 5.0
         glPushMatrix()
 
@@ -731,6 +899,9 @@ class P5(MyCanvasBase):
         glPopMatrix()
 
     def set_lighting(self):
+        """
+        Generate the lighting for the scene if self.lighting is True
+        """
         lightPosition = [-1, 1, 1, 0]
         glLightfv(GL_LIGHT0, GL_POSITION, lightPosition)
 
@@ -745,64 +916,103 @@ class P5(MyCanvasBase):
             glDisable(GL_LIGHT0)
 
     def get_scene(self):
+        """
+        Return the current scene
+        """
         return self.scenes[self.current_scene]
 
     def set_angle(self, value):
+        """
+        Set the perspective angle for the current scene
+        """
         scene = self.scenes[self.current_scene]
         scene.set_perspective(angle=value)
         angle, ratio, near, far = scene.perspective()
         self.redraw()
 
     def set_ratio(self, value):
+        """
+        Set the aspect ratio for the current scene
+        """
         scene = self.scenes[self.current_scene]
         scene.set_perspective(ratio=value)
         self.redraw()
 
     def set_near(self, value):
+        """
+        Set the near clipping for the current scene
+        """
         scene = self.scenes[self.current_scene]
         scene.set_perspective(near=value)
         self.redraw()
 
     def set_far(self, value):
+        """
+        Set the far clipping for the current scene
+        """
         scene = self.scenes[self.current_scene]
         scene.set_perspective(far=value)
         self.redraw()
 
     def add_box(self):
+        """
+        Add a box to the current scene
+        """
         self.scenes[self.current_scene].add_object(Box())
         self.redraw()
 
     def add_clown(self):
+        """
+        Add a clown to the current scene
+        """
         self.scenes[self.current_scene].add_object(Clown())
         self.redraw()
 
     def add_donut(self):
+        """
+        Add a donut to the current scene
+        """
         self.scenes[self.current_scene].add_object(Donut())
         self.redraw()
 
     def add_eye(self):
+        """
+        Add an eye to the current scene
+        """
         self.scenes[self.current_scene].add_object(Eye())
         self.redraw()
 
     def add_head(self):
+        """
+        Add a head to the current scene
+        """
         self.scenes[self.current_scene].add_object(Head())
         self.redraw()
 
     def add_sphere(self):
+        """
+        Add a sohere to the current scene
+        """
         self.scenes[self.current_scene].add_object(Sphere())
         self.redraw()
 
     def add_snowman(self):
+        """
+        Add a snowman to the current scene
+        """
         self.scenes[self.current_scene].add_object(Snowman())
         self.redraw()
 
     def redraw(self):
+        """
+        Handle redrawing the current scene
+        """
+        self.appInit()
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
         scene = self.scenes[self.current_scene]
         parallel = scene.projection_type()
         angle, ratio, near, far = scene.perspective()
-        # gluPerspective(angle, ratio, near, far)
         print angle, ratio, near, far
         if parallel:
             left, right, bottom, top, near, far = scene.ortho()

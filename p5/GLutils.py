@@ -116,6 +116,15 @@ class Scene3D(object):
                     up_y, up_z):
         """
         Set the lookat parameters for this scene
+        @param eye_x: x location for the eye point of the scene
+        @param eye_y: y location for the eye point of the scene
+        @param eye_z: z location for the eye point of the scene
+        @param look_x: x location for the lookat point in the scene
+        @param look_y: y location for the lookat point in the scene
+        @param look_z: z location for the lookat point in the scene
+        @param up_x: x location for the up point in the scene
+        @param up_y: y location for the up point in the scene
+        @param up_z: z location for the up point in the scene
         """
         self.eye_x  = eye_x
         self.eye_y  = eye_y
@@ -137,6 +146,10 @@ class Scene3D(object):
     def set_perspective(self, angle=None, ratio=None, near=None, far=None):
         """
         Set the perspective for this scene
+        @param angle: field of view angle for the scene in degrees
+        @param ratio: aspect ratio that determines the field of view in x 
+        @param near: distance from the viewer to the near clipping plane
+        @param far: distance from the viewer to the far clipping plane
         """
         self.view_angle = angle or self.view_angle
         self.aspect_ratio = ratio or self.aspect_ratio
@@ -162,14 +175,23 @@ class Scene3D(object):
         return self.up_x, self.up_y, self.up_z
 
     def perspective(self):
+        """
+        Return the perspective values for this scene
+        """
         return self.view_angle, self.aspect_ratio, self.near, self.far
 
     def redraw(self):
+        """
+        Redraw this scene by redrawing each individual element within it
+        """
         for shape in self.shapes:
             shape.redraw()
         glFlush()
 
     def set_ortho(self, left, right, bottom, top, near, far):
+        """
+        Set the ortho variables for this scene
+        """
         self.left = left
         self.right = right
         self.bottom = bottom
@@ -178,9 +200,15 @@ class Scene3D(object):
         self.far = far
 
     def ortho(self):
+        """
+        Return the ortho variables for this scene
+        """
         return self.left, self.right, self.bottom, self.top, self.near, self.far
 
     def set_frustum(self, left, right, bottom, top, near, far):
+        """
+        Set the frustum variables for this scene
+        """
         self.fleft = left
         self.fright = right
         self.fbottom = bottom
@@ -189,46 +217,60 @@ class Scene3D(object):
         self.ffar = far
 
     def frustum(self):
+        """
+        Return the frustum variables for this scene
+        """
         return self.fleft, self.fright, self.fbottom, self.ftop, self.fnear, self.ffar
 
     def set_draw_axes(self, yesno):
+        """
+        Toggle the draw_axes variable for this scene
+        """
         self.draw_axes = yesno
 
     def set_projection_type(self, p_type=True):
+        """
+        Set the projection type for this scene
+        """
         self.parallel = p_type
 
     def projection_type(self):
+        """
+        Return the projection type for this scene
+        """
         return self.parallel
 
 class Texture(wx.Image):
-    """docstring for Texture"""
+    """
+    Texture object
+    """
     def __init__(self, name='Sunrise.jpg'):
         wx.Image.__init__(self, name)
+        self.texture_id = glGenTextures(1)
 
     def load_jpeg(self, file_name):
+        """
+        Process the jpeg data for this image
+        """
         height = self.GetHeight()
         width  = self.GetWidth()
         image  = self.GetData()
         print width, height
-        self.texture_id = glGenTextures(1)
-        # glBindTexture(GL_TEXTURE_2D, self.texture_id)
-        # glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT )
-        # glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT )
-        # glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR )
-        # glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR )
-        # # map the image data to the texture. note that if the input
-        # # type is GL_FLOAT, the values must be in the range [0..1]
-        # glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_LUMINANCE,
-        #              GL_UNSIGNED_BYTE, image)
 
-        # glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR )
-        # glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR )
-        # gluBuild2DMipmaps(GL_TEXTURE_2D, 3, width, height, GL_RGBA, 
-        #                   GL_UNSIGNED_BYTE, image)
+        glBindTexture(GL_TEXTURE_2D, self.texture_id)
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT )
+        glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT )
+        glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR )
+        glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR )
+        # map the image data to the texture. note that if the input
+        # type is GL_FLOAT, the values must be in the range [0..1]
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_LUMINANCE,
+                     GL_UNSIGNED_BYTE, self.GetData())
 
     def enable(self):
-        # glEnable( GL_TEXTURE_2D );
-        # glBindTexture( GL_TEXTURE_2D, self.texture_id )
+        """
+        Enable the current texture
+        """
         glEnable(GL_TEXTURE_2D)
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
@@ -236,4 +278,7 @@ class Texture(wx.Image):
         glBindTexture(GL_TEXTURE_2D, self.texture_id)
 
     def disable(self):
+        """
+        Disable the current texture
+        """
         glDisable( GL_TEXTURE_2D )

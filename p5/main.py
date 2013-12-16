@@ -54,7 +54,7 @@ class MyParentFrame(wx.MDIParentFrame):
     The main frame for the app
     """
     def __init__(self):
-        wx.MDIParentFrame.__init__(self, None, -1, '770W P5 (Beta)', size=(1000,700),
+        wx.MDIParentFrame.__init__(self, None, -1, '770W P5 (Final Version)', size=(1000,700),
                         style=wx.DEFAULT_FRAME_STYLE | wx.HSCROLL | wx.VSCROLL)
 
         self.winCount = 0
@@ -625,36 +625,36 @@ class MyParentFrame(wx.MDIParentFrame):
             event_id = event.GetId()
         except AttributeError:
             event_id = event
-        print 'Button Clicked: %d' % event_id
+        print 'Button %d Clicked' % event_id
         if event_id == DEMO1_BUTTOM:
-            print '\tDemo1 Clicked'
+            print '\tDemo1'
             self.midWindow.DestroyChildren()
             self.windowRight = Demo1(self.win3)
             self.windowRight.SetSizeWH(800, 700)
         elif event_id == DEMO2_BUTTOM:
-            print '\tDemo2 Clicked'
+            print '\tDemo2'
             self.midWindow.DestroyChildren()
             self.windowRight = Demo2(self.win3)
             self.windowRight.SetSizeWH(800, 700)
         elif event_id == DEMO3_BUTTOM:
-            print '\tDemo3 Clicked'
+            print '\tDemo3'
             self.midWindow.DestroyChildren()
             self.windowRight = Demo3(self.win3)
             self.midWindow = self.demo3_controls(self.win2, 0, 0)
             self.windowRight.SetSizeWH(800, 700)
         elif event_id == DEMO4_BUTTOM:
-            print '\tDemo4 Clicked'
+            print '\tDemo4'
             self.midWindow.DestroyChildren()
             self.windowRight = Demo4(self.win3)
             self.midWindow = self.demo4_controls(self.win2, 0, 0)
             self.windowRight.SetSizeWH(800, 700)
         elif event_id == DEMO5_BUTTOM:
-            print '\tDemo5 Clicked'
+            print '\tDemo5'
             self.midWindow.DestroyChildren()
             self.windowRight = Demo5(self.win3)
             self.windowRight.SetSizeWH(800, 700)
         elif event_id == P5_BUTTOM:
-            print '\tP5 Clicked'
+            print '\tP5'
             self.midWindow.DestroyChildren()
             self.windowRight = P5(self.win3)
             self.midWindow = self.p5_controls(self.win2, 0, 0)
